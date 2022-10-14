@@ -1,0 +1,15 @@
+filelock==3.3.2
+kornia==0.6.2
+numpy>=1.21.3
+matplotlib
+seaborn
+colorcet
+python-opencv
+pycocotools
+pytorch-lightning==1.5.0
+pandas>=1.3.4
+qtoml==0.3.1
+scikit-learn>=1.0.1
+scipy>=1.7.1
+tensorboard==2.7.0
+tqdm>=4.62.3

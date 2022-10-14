@@ -1,0 +1,122 @@
+name = "ST3-Imagenet"
+mpl_backend = "agg"
+
+# -- Pytorch-lightning Trainer
+[trainer.parameters]
+accelerator = "gpu"
+gpus = 1
+
+# Change this to use a bigger batch for gradient computation
+accumulate_grad_batches = 1
+
+# Apply gradient clipping by default
+gradient_clip_val = 3.0
+gradient_clip_algorithm = "norm"
+
+# Use Automatic lr-tuning
+# auto_lr_find = "tune_lr"
+
+# slows training down if set to true
+deterministic = false
+num_sanity_val_steps = 1
+
+# Enables cudnn.benchmark -> may accelarate some conv ops
+benchmark = true
+
+# max_epochs is set automatically based on its trainmodule value, but can be overwritten here
+# max_epochs = 5
+
+# mixed precision training with the following params
+precision = 16
+amp_backend="native"
+
+[[trainer.callbacks]]
+type = "DelayedModelCheckpoint"
+start_saving_epoch = 14
+monitor = "val/metric/acc"
+save_last = true
+mode = "max" # 'max' for acc, iou etc. 'min' for loss
+
+[trainer.resume]
+path = "" # Write path to '.ckpt' file
+
+
+# -- Pytorch-lightning customized Module
+[trainmodule]
+type = "RewindPruningIncrease"
+prune_max = 0.90
+pruning_criterion = "l1"
+use_gpu = true
+start_epoch = 5
+end_epoch = 50
+n_epochs = 100
+k_models = 1
+power = 3
+ratio_granularity = "step"
+
+[optimizer]
+type = 'SGD'
+lr = 0.2
+weight_decay = 5e-5
+momentum = 0.875
+
+[lr_scheduler]
+type = 'CosineLR'
+warmup_epoch = 5
+
+[network.structure]
+type = 'Classifier'
+n_classes = 1000
+apply_to = "image"
+
+[network.backbone]
+type = 'BigResNet'
+n_size = 50
+input_size = 3
+
+[network.weight_init]
+pretrained = ""
+weight_fx = 'custom'
+distribution = 'normal'
+sampling = 'kaiming'
+seed = 123
+freeze = ""  # TODO: add support
+momentum = 0.99
+
+[network.layers]
+conv.type = "STEPrunedConv2d"
+conv.soft = true
+conv.rescale = true
+fc.type = "STEPrunedLinear"
+fc.soft = true
+fc.rescale = true
+act.type = "ReLU"
+
+
+[[network.losses]]
+type = "LabelSmoothing"
+smoothing = 0.1
+apply_to = "classification"
+
+[[network.metrics]]
+type = "Accuracy"
+apply_to = "classification"
+name = "acc"
+
+# -- Pytorch-lightning customized DataModule
+[dataset]
+type = 'ImageNet'
+n_workers = 16
+batch_size = 512
+
+# -- Kornia customized augmentation Module (on gpu)
+[[preprocessors]]
+type = "Normalize"
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+scaling = 1.0
+apply_to = ["image"]
+
+[[augmentations]]
+type = "RandomHorizontalFlip"
+p = 0.5

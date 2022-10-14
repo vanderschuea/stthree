@@ -1,0 +1,109 @@
+name = 'ST3-Cifar'
+mpl_backend = 'agg'
+
+[trainer.parameters]
+accelerator = 'cpu'
+gpus = 1
+accumulate_grad_batches = 1
+gradient_clip_val = 3.0
+gradient_clip_algorithm = 'norm'
+deterministic = false
+num_sanity_val_steps = 0
+benchmark = true
+
+[trainer.resume]
+path = ''
+
+[[trainer.callbacks]]
+type = 'DelayedModelCheckpoint'
+start_saving_epoch = 81
+monitor = 'val/metric/acc'
+save_last = true
+mode = 'max'
+
+
+[trainmodule]
+type = 'PruningIncrease'
+prune_max = 0.9
+pruning_criterion = 'l1'
+use_gpu = true
+start_epoch = 5
+end_epoch = 80
+n_epochs = 160
+k_models = 1
+power = 3
+ratio_granularity = 'step'
+normalize_ops = false
+
+[optimizer]
+type = 'SGD'
+lr = 0.1
+weight_decay = 0.0001
+momentum = 0.9
+
+[lr_scheduler]
+type = 'MultiStepLR'
+milestones = [80, 120]
+gamma = 0.1
+
+[network.structure]
+type = 'Classifier'
+n_classes = 10
+apply_to = 'image'
+
+[network.backbone]
+type = 'ResNet'
+n_size = 3
+input_size = 3
+
+[network.weight_init]
+pretrained = ''
+weight_fx = 'custom'
+distribution = 'normal'
+sampling = 'kaiming'
+seed = 123
+freeze = ''
+momentum = 0.99
+
+[network.layers.conv]
+type = 'STEPrunedConv2d'
+soft = true
+rescale = true
+
+[network.layers.fc]
+type = 'STEPrunedLinear'
+soft = true
+rescale = true
+
+[network.layers.act]
+type = 'ReLU'
+
+[[network.losses]]
+type = 'CrossEntropyLoss'
+apply_to = 'classification'
+
+
+[[network.metrics]]
+type = 'Accuracy'
+apply_to = 'classification'
+name = 'acc'
+
+
+[dataset]
+type = 'Cifar10'
+max_perc = 1.0
+n_workers = 4
+batch_size = 128
+extend_train = 1
+
+[[preprocessors]]
+type = 'Normalize'
+mean = [0.4914, 0.4822, 0.4465]
+std = [0.2023, 0.1994, 0.201]
+scaling = 1.0
+apply_to = ['image']
+
+
+[[augmentations]]
+type = 'RandomHorizontalFlip'
+p = 0.5
