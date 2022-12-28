@@ -1,5 +1,5 @@
 # ST-3: Are Straight-Through gradients and Soft-Thresholding all you need for Sparse Training?
-Source Code for accepted paper at the upcoming WACV 2022 conference ([paper here](https://arxiv.org/abs/2212.01076))
+Source Code for accepted paper at the upcoming WACV 2023 conference ([paper here](https://arxiv.org/abs/2212.01076))
 
 ## General Overview
 
